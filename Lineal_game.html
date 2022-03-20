@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>game</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+  <script type="text/javascript" charset="UTF-8"
+    src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsxgraph@1.2.1/distrib/geonext.min.js" type="text/javascript"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css"
+    integrity="sha384-R4558gYOUz8mP9YWpZJjofhk+zx0AS11p36HnD2ZKj/6JR5z27gSSULCNHIRReVs" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css"
+    integrity="sha384-R4558gYOUz8mP9YWpZJjofhk+zx0AS11p36HnD2ZKj/6JR5z27gSSULCNHIRReVs" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js"
+    integrity="sha384-z1fJDqw8ZApjGO3/unPWUPsIymfsJmyrDVWC8Tv/a1HeOtGmkwNd/7xUS0Xcnvsx"
+    crossorigin="anonymous"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"
+    integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    .jxgbox {
+      width: 400px;
+      height: 400px;
+      margin: auto;
+    }
+
+    .v-slider__thumb {
+      height: 10px;
+      width: 10px;
+      stroke-width: 2px;
+      border-color: white;
+    }
+
+    .v-slider--horizontal .v-slider__track-container {
+      height: 5px;
+    }
+  </style>
+  <style>
+    .ocultar{
+      display: none
+    }
+    .mostrar{
+      display: block
+    }
+    .tarjeta {
+      font-family: 'Press Start 2P';
+      gap: 20px;
+      font-size: 15px;
+      display: flex;
+      width: 400px;
+      background: #E5E5E5;
+      flex-direction: row;
+      padding: 15px;
+      margin: auto;
+      justify-content: center;
+      border-radius: 10px;
+    }
+
+    .tarjeta div:nth-child(2) {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* .tarjeta */
+  </style>
+</head>
+
+<body>
+
+
+  <div id="app">
+    <v-app>
+      <v-main>
+        <!-- inicio -->
+        <v-container v-if="!playExe" id="game-intro" style="display: flex; align-items: center; justify-content:center; height: 100%;">
+          <v-card class="tarjeta" width="60%" style="flex-direction: column;">
+            <v-card-text>
+              <p>
+
+                EL SIGUIENTE JUEGO ES PARA PRACTICAR TUS HABILIDADES PARA IDENTIFICAR FUNCIONES LINEALES MEDIANTE SU
+                REPRESENTACIÓN GRÁFICA.
+
+              </p>
+
+              <p>
+                USANDO LOS DESLIZADORES, LOS CUALES CONTROLAN LOS PARAMETROS DE LA FUNCIÓN AZUL. DEBES HACER CAÑZAR ÑA
+                RECTA CON LA ROJA ANTES DE QUE ACABE EL TIEMPO.
+              </p>
+
+              <p>
+                DEBES CALZAR POR LO MENOS 10 RECTAS CONSECUTIVAS PARA VER EL CÓDIGO SECRETO!!
+              </p>
+            </v-card-text>
+
+            <div style="width: 100%; display: flex; justify-content: center;">
+             
+              <v-btn @click="play()" color="#76FF03" dark>
+                JUGAR
+              </v-btn>
+            </div>
+
+
+            <v-layout>
+
+          </v-card>
+        </v-container>
+        <!-- juego -->
+        <v-container v-if="tiempo != 'EXPIRADO'" :class="{'mostrar':playExe, 'ocultar':!playExe}" id="game-play">
+          <div class="tarjeta">
+
+            <div>
+              LINEAS CONSECUTIVAS: <span style="color: rgb(19, 185, 185)">{{consecutivas}}</span>
+
+            </div>
+            <div>
+              Tiempo Restante:
+              <span style="color: rgb(19, 185, 185)" id="contadorDeTiempo">{{tiempo}}</span>
+            </div>
+
+
+          </div>
+          <p></p>
+
+
+
+
+          <div id="box" class="jxgbox"></div>
+          <!-- Sliders -->
+          <v-slider v-model="valorA" @change="verificarRespuesta" min="-4" max="4" step="0.1" color="primary" ticks="always" tick-size="1"
+            slider-track-width="1"><b slot="append">a: {{valorA}}</b></v-slider>
+          <!-- Alerta de respuesta incorrecta -->
+          <!--           <v-alert v-if="resultadoVerificacion == 'incorrecta'" color="error" dark>
+            La respuesta es incorrecta
+          </v-alert> -->
+        </v-container>
+
+        <!-- Pantallas Finales -->
+        <v-container v-if="resultado == 'perdiste'" id="game-intro" style="display: flex; align-items: center; justify-content:center; height: 100%;">
+          <v-card class="tarjeta" width="60%" style="flex-direction: column;">
+            <v-card-text>
+              <img src="triste.gif" alt="">
+              <p>
+                DEBES COMPLETAR POR LO MENOS 10 LINEAS CONSECUTIVAS PARA OBTENER EL CÓDIGO SECRETO
+              </p>
+
+            </v-card-text>
+
+            <div style="width: 100%; display: flex; justify-content: center;">
+             
+              <a href="/Lineal_game.html" color="#76FF03" dark>
+                volver a jugar
+              </a>
+            </div>
+
+
+            <v-layout>
+
+          </v-card>
+        </v-container>
+        <v-container v-if="resultado == 'ganaste'" id="game-intro" style="display: flex; align-items: center; justify-content:center; height: 100%;">
+          <v-card class="tarjeta" width="60%" style="flex-direction: column;">
+            <v-card-text>
+
+
+              <p>
+                LOGRASTE {{consecutivas}} LINEAS CONSECUTIVAS!!
+              </p>
+              <img src="https://i.giphy.com/media/UtJtnnbCtJjSd0utDn/giphy.webp" alt="">
+              <p>
+                EL CODIGO SECRETO ES 5454
+              </p>
+              <p>
+                CUANTAS LINEAS CONSECUTIVAS CREES QUE PUEDES HACER, COMPARTE UN PANTALLAZO EN LOS COMENTARIOS
+              </p>
+            </v-card-text>
+
+            <div style="width: 100%; display: flex; justify-content: center;">
+             
+              <a href="/Lineal_game.html" color="#76FF03" dark>
+                volver a jugar
+              </a>
+            </div>
+
+
+            <v-layout>
+
+          </v-card>
+        </v-container>
+      </v-main>
+       
+    </v-app>
+  </div>
+
+  <script>
+    // Vue.js
+    var app = new Vue({
+      el: '#app',
+      // Configuración de Vuetify
+      vuetify: new Vuetify({
+        theme: {
+          themes: {
+            // Tema claro
+            light: {
+              primary: '#3b3b98',
+              secondary: '#faa585',
+            },
+            // Tema oscuro
+            dark: {
+              primary: '#3b3b98',
+              secondary: '#faa585',
+            }
+          }
+        }
+      }),
+
+      // Data (variables dinámicas)
+      data: {
+        tiempo: 0,
+        consecutivas: 0,
+        // Valores de los sliders
+        valorA: 0.6,
+        valorB: 0,
+        valorC: -2,
+        // Valores de la cuadratica 2
+        valorA2: 0,
+        valorB2: 0,
+        valorC2: 0,
+        // Variables del gráfico
+        board: null,
+        G0: null,
+        G1: null,
+        X1: null,
+        X2: null,
+        T: null,
+        o: null,
+        l1: null,
+        /* contador: 300, */
+        // Respuesta y resultado de validacion
+        respuestaAlumnoData: '',
+        resultadoVerificacion1: '',
+        ahora: new Date(moment().add(5, 'minutes')),
+        minutos: '',
+        segundos: '',
+        playExe: false,
+        resultado: ''
+        
+
+      },
+      // Observa los valores de los sliders y refresca el gráfico cuando hay cambios
+      // Variables auto-calculadas
+      computed: {
+        
+
+        // Expresiones algebraicas
+        expresionAlgebraicaGeneral: function () {
+          return katex.renderToString(this.valorA2 + "=" + this.valorA)
+        },
+
+        // Ecuación Cuadrática
+        ecCuadratica: function () {
+          return Math.round((Math.pow(this.valorB2, 2)) - (4 * this.valorA2 * this.valorC2));
+        },
+        // Resultado 1
+        resultadoCorrecto1: function () {
+
+
+          return this.valorA2;
+        },
+        // Respuesta alumno
+        respuestaAlumno: function () {
+          return (this.ValorA);
+        },
+        // Resultado 2
+        resultadoCorrecto: function () {
+          return (this.ValorA2);
+        },
+
+
+
+        test: function (){
+          if(this.resultadoCorrecto1 == this.valorA){
+
+            this.resultadoVerificacion = 'correcta'
+          }
+        }
+
+      },
+
+      watch: {
+        
+
+        valorA: function () {
+          this.board.update();
+        },
+        valorB: function () {
+          this.board.update();
+        },
+        valorC: function () {
+          this.board.update();
+        },
+        verificarRespuesta: function () {
+          if (this.valorA == this.valorB) {
+
+          } else {
+            this.resultadoVerificacion = 'incorrecta'
+          }
+        },
+        
+        test2: function (){
+          if(this.valorA == this.valorB){
+
+            this.resultadoVerificacion = 'correcta'
+          }
+        }
+
+
+      },
+
+      // Métodos (funciones)
+      methods: {
+        // Signo de un numero para la expresion algebraica
+        verificarRespuesta: function () {
+
+          if (this.valorA == this.resultadoCorrecto1) {
+            this.resultadoVerificacion = 'correcta'
+            this.consecutivas +=1
+
+            this.descontar()
+            this.reiniciar()
+          } else {
+            this.resultadoVerificacion = 'incorrecta'
+          }
+
+        },
+        verNegativo(num) {
+          return (num >= 0) ? '+ ' : ' '
+        },
+        // Obtener numero aleatorio dentro de rango
+        getRandomArbitrary(min, max) {
+          return Math.random() * (max - min) + min;
+        },
+
+        // Generar valores para la cuadratica 2
+        generarValoresCuadratica2() {
+          this.valorA2 = Math.round(this.getRandomArbitrary(this.getRandomArbitrary(-1,-2), this.getRandomArbitrary(1,2)) * 10) / 10;
+        },
+
+
+        // Funciones cuadraticas
+        lineal(x) {
+          return this.valorA * x
+        },
+
+        // funciones cuadraticas
+
+        lineal2(x) {
+          return this.valorA2 * x
+        },
+
+
+        // Obtener intersecciones
+        /*         obtenerInterseccionX1 () {
+                  return (-this.valorB + Math.sqrt(this.valorB * this.valorB - 4 * this.valorA * this.valorC)) / (2 * this.valorA)
+                },
+                obtenerInterseccionX2 () {
+                  return (-this.valorB - Math.sqrt(this.valorB * this.valorB - 4 * this.valorA * this.valorC)) / (2 * this.valorA)
+                }, */
+
+        // Obtener valor del slider C
+        obtenerValorC() {
+          return this.valorC
+        },
+
+        // Inicializar gráfico
+        inicializarGrafico() {
+          this.board = JXG.JSXGraph.initBoard('box', {
+            boundingbox: [-4, 4, 4, -4], axis: true,
+            showCopyright: false,
+            showNavigation: true,
+            keepaspectratio: false,
+            zoom:
+            {
+              wheel: false,
+              enabled: false
+            },
+            pan:
+            {
+              needTwoFingers: true,
+              enabled: false
+            }
+          });
+
+          this.G0 = this.board.create('functiongraph', [this.lineal.bind(this), -5, 5], { strokeWidth: 5, strokeColor: '#1B9CFC' })
+          this.G1 = this.board.create('functiongraph', [this.lineal2.bind(this), -5, 5], { strokeWidth: 5, strokeColor: '#FC427B' })
+        },
+        
+
+        // Verificar la respuesta cuando el usuario hace click en "Verificar"
+
+
+        // Reiniciar cuadratica 2 y resultado
+        reiniciar() {
+          this.generarValoresCuadratica2()
+          this.resultadoVerificacion = ''
+          this.respuestaAlumnoData = ''
+          this.board.update()
+        },
+      contador() {
+          setInterval(() => {
+
+            let ahora = new Date().getTime();
+
+
+            let diferencia = this.ahora - ahora;
+
+            
+            var dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
+            var horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+            var segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
+
+           
+
+
+            this.tiempo = `${minutos}:${segundos}`
+
+            if (diferencia < 0) {
+
+
+
+              this.tiempo = 'EXPIRADO'
+              
+              if(this.consecutivas < 10){
+                this.resultado = 'perdiste'
+              }
+              else{
+                this.resultado = 'ganaste'
+              }
+        
+              
+            }
+          }, 1000);
+        },
+        play() {
+          this.playExe = true
+          this.ahora = new Date(moment().add(1, 'minutes')).getTime()
+          this.contador()
+        },
+
+        descontar(){
+
+          if(this.consecutivas <= 3){
+            /* -10s */
+            this.ahora = new Date(moment(this.ahora).subtract(10,'seconds')).getTime()
+          }
+          if(this.consecutivas <= 6 && this.consecutivas >= 3){
+            /* -9s */
+            this.ahora = new Date(moment(this.ahora).subtract(9,'seconds')).getTime()
+            
+          }
+          if(this.consecutivas <= 9 && this.consecutivas >= 6){
+            /* -8s */
+            this.ahora = new Date(moment(this.ahora).subtract(8,'seconds')).getTime()
+            
+          }
+          if(this.consecutivas <= 12 && this.consecutivas >= 9){
+            /* 7s */
+            this.ahora = new Date(moment(this.ahora).subtract(7,'seconds')).getTime()
+
+          }
+          if(this.consecutivas <= 15 && this.consecutivas >= 12){
+            /* 6s */
+            this.ahora = new Date(moment(this.ahora).subtract(6,'seconds')).getTime()
+            
+          }
+          if(this.consecutivas <= 18 && this.consecutivas >= 15){
+            /* 5s */
+            this.ahora = new Date(moment(this.ahora).subtract(5,'seconds')).getTime()
+            
+          }
+          if(this.consecutivas <= 21 && this.consecutivas >= 21){
+            /* 4s */
+            this.ahora = new Date(moment(this.ahora).subtract(4,'seconds')).getTime()
+            
+          }
+          if(this.consecutivas <= 24 && this.consecutivas >= 24){
+            /* 3s */
+            this.ahora = new Date(moment(this.ahora).subtract(3,'seconds')).getTime()
+            
+          }
+          if(this.consecutivas <= 27 && this.consecutivas >= 25){
+            /* 2s */
+            this.ahora = new Date(moment(this.ahora).subtract(2,'seconds')).getTime()
+            
+          }
+          if(this.consecutivas <= 29 && this.consecutivas >= 29){
+            /* 1s */
+            this.ahora = new Date(moment(this.ahora).subtract(1,'seconds')).getTime()
+            
+          }
+
+        },
+
+      },
+      // Se ejecuta cuando el componente Vue es creado
+      mounted: function () {
+        this.generarValoresCuadratica2()
+        this.inicializarGrafico()
+       
+      }
+    })
+
+
+  </script>
+
+
+
+
+</body>
+
+</html>
